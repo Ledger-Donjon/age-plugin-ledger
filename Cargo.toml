@@ -1,0 +1,24 @@
+[package]
+name = "age-plugin-ledger"
+description = "Ledger Nano plugin for age clients"
+version = "0.1.0"
+repository = "https://github.com/NicsTr/age-plugin-ledger"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[dependencies]
+age-core = "0.9"
+age-plugin = "0.4"
+base64 = "0.21"
+bech32 = "0.9"
+console = { version = "0.15", default-features = false }
+gumdrop = "0.8"
+hidapi = "2.3.1"
+k256 = { version = "0.13", features = ["ecdh"] }
+rand = "0.8"
+sha2 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"
+which = "4.4.0"
