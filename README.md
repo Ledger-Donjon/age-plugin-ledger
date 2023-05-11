@@ -5,11 +5,16 @@ This plugin aims to allow interaction between a Ledger device and an age client 
 
 This plugin is highly based on [age-plugin-yubikey](https://github.com/str4d/age-plugin-yubikey) by str4d.
 
+![Integration with Ledger Nano S+](./ledger_nanosp_demo.jpg)
+
 ## Installation
 
+You can install the plugin using:
 ```
 cargo install age-plugin-ledger
 ```
+
+You will also need to install [the app for Ledger Nano](https://github.com/Ledger-Donjon/app-age).
 
 ## Configuration
 
