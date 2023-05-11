@@ -8,7 +8,7 @@ This plugin is highly based on [age-plugin-yubikey](https://github.com/str4d/age
 ## Installation
 
 ```
-cargo install git+https://github.com/NicsTr/age-plugin-ledger.git
+cargo install age-plugin-ledger
 ```
 
 ## Configuration
