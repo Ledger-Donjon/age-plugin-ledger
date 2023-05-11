@@ -5,6 +5,7 @@ use std::process::{Command, Stdio};
 
 const PLUGIN_BIN: &str = env!("CARGO_BIN_EXE_age-plugin-ledger");
 
+#[cfg(feature = "test-device")]
 #[test]
 fn recipient_and_identity_match() {
     let recipient = Command::new(PLUGIN_BIN)
@@ -51,6 +52,7 @@ fn plugin_encrypt() {
     assert_eq!(status.code(), Some(0));
 }
 
+#[cfg(feature = "test-device")]
 #[test]
 fn plugin_decrypt() {
     let mut identity_file = tempfile::NamedTempFile::new_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
