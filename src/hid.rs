@@ -11,7 +11,7 @@ impl LedgerHIDDevice {
             .device_list()
             .filter(|d| d.vendor_id() == 0x2c97)
             .collect();
-        if ledger_devices.len() < 1 {
+        if ledger_devices.is_empty() {
             panic!("no Ledger Nano were found");
         }
         let device = ledger_devices[0].open_device(&api).unwrap();
@@ -26,7 +26,7 @@ impl LedgerHIDDevice {
         let data_len = (data.len() as u16).to_be_bytes();
         let mut data_to_send = data_len.to_vec();
         data_to_send.extend_from_slice(data);
-        for (seq_idx, packet) in data_to_send.chunks(64-5).enumerate() {
+        for (seq_idx, packet) in data_to_send.chunks(64 - 5).enumerate() {
             buffer[0..][..header.len()].copy_from_slice(&header);
             buffer[header.len()..][..2].copy_from_slice(&(seq_idx as u16).to_be_bytes());
             buffer[header.len() + 2..][..packet.len()].copy_from_slice(packet);

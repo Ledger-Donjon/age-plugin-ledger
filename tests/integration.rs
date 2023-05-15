@@ -8,16 +8,10 @@ const PLUGIN_BIN: &str = env!("CARGO_BIN_EXE_age-plugin-ledger");
 #[cfg(feature = "test-device")]
 #[test]
 fn recipient_and_identity_match() {
-    let recipient = Command::new(PLUGIN_BIN)
-        .arg("--list")
-        .output()
-        .unwrap();
+    let recipient = Command::new(PLUGIN_BIN).arg("--list").output().unwrap();
     assert_eq!(recipient.status.code(), Some(0));
 
-    let identity = Command::new(PLUGIN_BIN)
-        .arg("--identity")
-        .output()
-        .unwrap();
+    let identity = Command::new(PLUGIN_BIN).arg("--identity").output().unwrap();
     assert_eq!(identity.status.code(), Some(0));
 
     let recipient_file = String::from_utf8_lossy(&recipient.stdout);
@@ -60,10 +54,7 @@ fn plugin_decrypt() {
     let plaintext = "Testing device encryption";
 
     // Write an identity file corresponding to this device slot.
-    let identity = Command::new(PLUGIN_BIN)
-        .arg("--identity")
-        .output()
-        .unwrap();
+    let identity = Command::new(PLUGIN_BIN).arg("--identity").output().unwrap();
     assert_eq!(identity.status.code(), Some(0));
     identity_file.write_all(&identity.stdout).unwrap();
     identity_file.flush().unwrap();

@@ -6,7 +6,7 @@ use std::fmt;
 
 use crate::RECIPIENT_PREFIX;
 
-pub(crate) const TAG_BYTES: usize = 4;
+pub(crate) const TAG_BYTES: usize = 32;
 
 /// Wrapper around a compressed seck256r1 curve point.
 #[derive(Clone)]
@@ -14,7 +14,7 @@ pub struct Recipient(k256::PublicKey);
 
 impl fmt::Debug for Recipient {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Recipient({:?})", self.to_encoded().as_bytes())
+        write!(f, "Recipient({:?})", self.to_encoded(true).as_bytes())
     }
 }
 
@@ -23,7 +23,7 @@ impl fmt::Display for Recipient {
         f.write_str(
             bech32::encode(
                 RECIPIENT_PREFIX,
-                self.to_encoded().as_bytes().to_base32(),
+                self.to_encoded(true).as_bytes().to_base32(),
                 Variant::Bech32,
             )
             .expect("HRP is valid")
@@ -47,14 +47,14 @@ impl Recipient {
         Option::from(k256::PublicKey::from_encoded_point(encoded)).map(Recipient)
     }
 
-    /// Returns the compressed SEC-1 encoding of this recipient.
-    pub(crate) fn to_encoded(&self) -> k256::EncodedPoint {
-        self.0.to_encoded_point(true)
+    /// Returns the compressed or uncompressed encoding of this recipient.
+    pub(crate) fn to_encoded(&self, compressed: bool) -> k256::EncodedPoint {
+        self.0.to_encoded_point(compressed)
     }
 
     pub(crate) fn tag(&self) -> [u8; TAG_BYTES] {
-        let tag = Sha256::digest(self.to_encoded().as_bytes());
-        (&tag[0..TAG_BYTES]).try_into().expect("length is correct")
+        let tag = Sha256::digest(self.to_encoded(false).as_bytes());
+        (&tag[..TAG_BYTES]).try_into().expect("length is correct")
     }
 
     /// Exposes the wrapped public key.

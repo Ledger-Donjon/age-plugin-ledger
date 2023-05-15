@@ -5,7 +5,7 @@ pub enum Error {
     Io(io::Error),
     Hid(hidapi::HidError),
     MultipleCommands,
-    MalformatedMsg,
+    MalformattedMsg,
 }
 
 impl From<io::Error> for Error {
@@ -27,8 +27,10 @@ impl fmt::Debug for Error {
         match self {
             Error::Io(e) => writeln!(f, "Failed to set up device: {e:?}")?,
             Error::Hid(e) => writeln!(f, "Failed to set up device: {e:?}")?,
-            Error::MultipleCommands => writeln!(f, "One of --identity or --list should be specified.")?,
-            Error::MalformatedMsg => writeln!(f, "Device returned malformated message.")?,
+            Error::MultipleCommands => {
+                writeln!(f, "One of --identity or --list should be specified.")?
+            }
+            Error::MalformattedMsg => writeln!(f, "Device returned malformated message.")?,
         }
         Ok(())
     }

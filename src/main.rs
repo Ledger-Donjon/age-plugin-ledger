@@ -66,7 +66,7 @@ fn identity() -> Result<(), Error> {
 fn list() -> Result<(), Error> {
     let device = crate::hid::LedgerHIDDevice::new();
     let recipient = key::get_device_recipient(&device)?;
-    println!("{}", recipient);
+    println!("{recipient}");
     println!();
     Ok(())
 }

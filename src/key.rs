@@ -12,29 +12,47 @@ use std::io;
 use crate::{
     error::Error,
     format::{RecipientLine, STANZA_KEY_LABEL},
+    hid::LedgerHIDDevice,
     k256::{Recipient, TAG_BYTES},
     IDENTITY_PREFIX,
-    hid::LedgerHIDDevice,
 };
 
+const CONFIRM_RECIPIENT_CMD: &[u8; 4] = b"\xE0\x01\x00\x00";
 const GET_RECIPIENT_CMD: &[u8; 4] = b"\xE0\x02\x00\x00";
 const GET_SHARED_KEY_CMD: &[u8; 4] = b"\xE0\x03\x00\x00";
 
-/// Retrieve recipient from Ledger Nano device
+/// Confirm that the Ledger device is the one associated with the identity
+pub(crate) fn confirm_device_recipient(
+    device: &LedgerHIDDevice,
+    tag: [u8; TAG_BYTES],
+) -> Result<crate::k256::Recipient, Error> {
+    let mut cmd = CONFIRM_RECIPIENT_CMD.to_vec();
+    cmd.extend_from_slice(&[tag.len() as u8]);
+    cmd.extend_from_slice(&tag);
+
+    let device_response = device.exchange(&cmd)?;
+
+    if device_response.len() != 67 || &device_response[65..] != b"\x90\x00" {
+        return Err(Error::MalformattedMsg);
+    }
+    crate::k256::Recipient::from_bytes(&device_response[..65]).ok_or(Error::MalformattedMsg)
+}
+
+/// Retrieve recipient from Ledger device
 pub(crate) fn get_device_recipient(
     device: &LedgerHIDDevice,
 ) -> Result<crate::k256::Recipient, Error> {
     let device_response = device.exchange(GET_RECIPIENT_CMD)?;
     if device_response.len() != 67 || &device_response[65..] != b"\x90\x00" {
-        return Err(Error::MalformatedMsg);
+        return Err(Error::MalformattedMsg);
     }
-    crate::k256::Recipient::from_bytes(&device_response[..65]).ok_or(Error::MalformatedMsg)
+    crate::k256::Recipient::from_bytes(&device_response[..65]).ok_or(Error::MalformattedMsg)
 }
 
-/// Retrieve shared key from Ledger Nano device
+/// Retrieve shared key from Ledger device
 pub(crate) fn get_device_shared_key(
     device: &LedgerHIDDevice,
-    ephemeral_key: &[u8]
+    ephemeral_key: &[u8],
 ) -> Result<[u8; 32], Error> {
     assert!(ephemeral_key.len() == 65);
     let mut cmd = GET_SHARED_KEY_CMD.to_vec();
@@ -43,7 +61,7 @@ pub(crate) fn get_device_shared_key(
     let device_response = device.exchange(&cmd)?;
 
     if device_response.len() != 34 || &device_response[32..] != b"\x90\x00" {
-        return Err(Error::MalformatedMsg);
+        return Err(Error::MalformattedMsg);
     }
     Ok(device_response[..32].try_into().unwrap())
 }
@@ -89,17 +107,17 @@ impl Stub {
     }
 
     pub(crate) fn from_bytes(bytes: &[u8], identity_index: usize) -> Option<Self> {
-        if bytes.len() < 4 {
+        if bytes.len() < TAG_BYTES {
             return None;
         }
         Some(Stub {
-            tag: bytes[0..4].try_into().unwrap(),
+            tag: bytes[..TAG_BYTES].try_into().unwrap(),
             identity_index,
         })
     }
 
     fn to_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(9);
+        let mut bytes = Vec::with_capacity(TAG_BYTES);
         bytes.extend_from_slice(&self.tag);
         bytes
     }
@@ -120,21 +138,16 @@ impl Stub {
         let device = LedgerHIDDevice::new();
 
         // Read the pubkey from the device and check it still matches.
-        let pk = match get_device_recipient(&device) {
-            Ok(pk) => pk,
-            Err(_) => {
-                return Ok(Err(identity::Error::Identity {
+        let pk =
+            match confirm_device_recipient(&device, self.tag) {
+                Ok(pk) => pk,
+                Err(_) => return Ok(Err(identity::Error::Identity {
                     index: self.identity_index,
-                    message: "Could not get public key from device".to_string(),
-                }))
-            }
-        };
-        if pk.tag() != self.tag {
-            return Ok(Err(identity::Error::Identity {
-                index: self.identity_index,
-                message: "A device stub did not match the device".to_string(),
-            }));
-        }
+                    message:
+                        "Could not get public key from device or the stub did not match the device"
+                            .to_string(),
+                })),
+            };
 
         Ok(Ok(Some(Connection {
             device,
@@ -147,7 +160,7 @@ impl Stub {
 pub(crate) struct Connection {
     device: LedgerHIDDevice,
     pk: Recipient,
-    tag: [u8; 4],
+    tag: [u8; TAG_BYTES],
 }
 
 impl Connection {
@@ -160,11 +173,13 @@ impl Connection {
 
         // The Nano app for performing scalar multiplication takes the point in its
         // uncompressed SEC-1 encoding.
-        let shared_secret = get_device_shared_key(&self.device, line.epk_bytes.decompress().as_bytes()).map_err(|_| ())?;
+        let shared_secret =
+            get_device_shared_key(&self.device, line.epk_bytes.decompress().as_bytes())
+                .map_err(|_| ())?;
 
         let mut salt = vec![];
         salt.extend_from_slice(line.epk_bytes.as_bytes());
-        salt.extend_from_slice(self.pk.to_encoded().as_bytes());
+        salt.extend_from_slice(self.pk.to_encoded(true).as_bytes());
 
         let enc_key = hkdf(&salt, STANZA_KEY_LABEL, &shared_secret);
 
@@ -186,7 +201,7 @@ mod tests {
     #[test]
     fn stub_round_trip() {
         let stub = Stub {
-            tag: [7; 4],
+            tag: [7; TAG_BYTES],
             identity_index: 0,
         };
 

@@ -11,11 +11,13 @@ use k256::{
 use rand::rngs::OsRng;
 use sha2::Sha256;
 
-use crate::{k256::Recipient, STANZA_TAG};
+use crate::{
+    k256::{Recipient, TAG_BYTES},
+    STANZA_TAG,
+};
 
 pub(crate) const STANZA_KEY_LABEL: &[u8] = b"ledger-k256";
 
-const TAG_BYTES: usize = 4;
 const EPK_BYTES: usize = 33;
 const ENCRYPTED_FILE_KEY_BYTES: usize = 32;
 
@@ -119,7 +121,7 @@ impl RecipientLine {
 
         let mut salt = vec![];
         salt.extend_from_slice(epk_bytes.as_bytes());
-        salt.extend_from_slice(pk.to_encoded().as_bytes());
+        salt.extend_from_slice(pk.to_encoded(true).as_bytes());
 
         let enc_key = {
             let mut okm = [0; 32];
