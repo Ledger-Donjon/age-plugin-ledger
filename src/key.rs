@@ -199,6 +199,7 @@ impl Connection {
 #[cfg(test)]
 mod tests {
     use super::Stub;
+    use super::TAG_BYTES;
 
     #[test]
     fn stub_round_trip() {
