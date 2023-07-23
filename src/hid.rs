@@ -12,7 +12,8 @@ impl LedgerHIDDevice {
             .filter(|d| d.vendor_id() == 0x2c97)
             .collect();
         if ledger_devices.is_empty() {
-            panic!("no Ledger Nano were found");
+            eprintln!("No Ledger Nano were found");
+            std::process::exit(1);
         }
         let device = ledger_devices[0].open_device(&api).unwrap();
         device.set_blocking_mode(true).unwrap();
