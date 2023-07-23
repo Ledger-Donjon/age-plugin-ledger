@@ -42,7 +42,9 @@ pub(crate) fn confirm_device_recipient(
 pub(crate) fn get_device_recipient(
     device: &LedgerHIDDevice,
 ) -> Result<crate::k256::Recipient, Error> {
+    eprint!("Waiting for Ledger Nano...");
     let device_response = device.exchange(GET_RECIPIENT_CMD)?;
+    eprint!("\r                          \r");
     if device_response.len() != 67 || &device_response[65..] != b"\x90\x00" {
         return Err(Error::MalformattedMsg);
     }
