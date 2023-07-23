@@ -22,10 +22,10 @@ You will also need to install [the app for Ledger Nano](https://github.com/Ledge
 - The secret key material, which is derivated from the Ledger Nano seed and never leaves the device.
 - An age identity file, which contains information that an age client can use to figure out which Ledger Nano should be used.
 
-You may run the plugin directly to print the age identity file associated with the Ledger Nano:
+You may run the plugin to print the age identity file associated with the Ledger Nano:
 
 ```
-$ age-plugin-ledger
+$ age-plugin-ledger --identity
 ```
 
 If you are using passage, you may add this identity to `~/.passage/identities`.
