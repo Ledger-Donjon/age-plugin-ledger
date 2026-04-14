@@ -17,7 +17,7 @@ console = { version = "0.15", default-features = false }
 gumdrop = "0.8"
 hidapi = "2.3.1"
 k256 = { version = "0.13", features = ["ecdh"] }
-rand = "0.8"
+rand = "0.9"
 sha2 = "0.10"
 
 [dev-dependencies]
